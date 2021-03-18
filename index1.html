@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+  <body>
+    <h1>Download files using the WebTorrent protocol (BitTorrent over WebRTC).</h1>
+
+    <form>
+      <label for="torrentId">Download from a magnet link: </label>
+      <input name="torrentId", placeholder="magnet:" value="magnet:?xt=urn:btih:493f7c6c0d096a846e06c9a7a8f400547c28c3d5&dn=COMANDO.TO%20-%20Raya%20e%20o%20%c3%9altimo%20Drag%c3%a3o%202021%201080p%20DUAL%205.1&tr=udp%3a%2f%2ftracker.openbittorrent.com%3a80%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce&tr=udp%3a%2f%2ftracker.coppersurfer.tk%3a6969%2fannounce&tr=udp%3a%2f%2fglotorrents.pw%3a6969%2fannounce&tr=udp%3a%2f%2ftracker4.piratux.com%3a6969%2fannounce&tr=udp%3a%2f%2fcoppersurfer.tk%3a6969%2fannounce&tr=udp%3a%2f%2fretracker.lanta-net.ru%3a2710%2fannounce&tr=udp%3a%2f%2ftracker.tiny-vps.com%3a6969%2fannounce&tr=udp%3a%2f%2fopen.stealth.si%3a80%2fannounce&tr=udp%3a%2f%2fexodus.desync.com%3a6969%2fannounce&tr=http%3a%2f%2ftracker.coppersurfer.tk%3a6969%2fannounce&tr=http%3a%2f%2fbt.careland.com.cn%3a6969%2fannounce&tr=http%3a%2f%2fexodus.desync.com%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.cyberia.is%3a6969%2fannounce&tr=udp%3a%2f%2fpublic.popcorn-tracker.org%3a6969%2fannounce&tr=udp%3a%2f%2ftracker.torrent.eu.org%3a451%2fannounce&tr=udp%3a%2f%2ftracker.leechers-paradise.org%3a6969%2fannounce&tr=http%3a%2f%2fexodus.desync.com%2fannounce&tr=udp%3a%2f%2f9.rarbg.com%3a2710%2fannounce&tr=udp%3a%2f%2f9.rarbg.me%3a2780%2fannounce&tr=udp%3a%2f%2f9.rarbg.to%3a2730%2fannounce">
+      <button type="submit">Download</button>
+    </form>
+
+    <h2>Log</h2>
+    <div class="log"></div>
+
+    <!-- Include the latest version of WebTorrent -->
+    <script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
+
+    <script>
+      var client = new WebTorrent()
+
+      client.on('error', function (err) {
+        console.error('ERROR: ' + err.message)
+      })
+
+      document.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault() // Prevent page refresh
+
+        var torrentId = document.querySelector('form input[name=torrentId]').value
+        log('Adding ' + torrentId)
+        client.add(torrentId, onTorrent)
+      })
+
+      function onTorrent (torrent) {
+        log('Got torrent metadata!')
+        log(
+          'Torrent info hash: ' + torrent.infoHash + ' ' +
+          '<a href="' + torrent.magnetURI + '" target="_blank">[Magnet URI]</a> ' +
+          '<a href="' + torrent.torrentFileBlobURL + '" target="_blank" download="' + torrent.name + '.torrent">[Download .torrent]</a>'
+        )
+
+        // Print out progress every 5 seconds
+        var interval = setInterval(function () {
+          log('Progress: ' + (torrent.progress * 100).toFixed(1) + '%')
+        }, 5000)
+
+        torrent.on('done', function () {
+          log('Progress: 100%')
+          clearInterval(interval)
+        })
+
+        // Render all files into to the page
+        torrent.files.forEach(function (file) {
+          file.appendTo('.log')
+          log('(Blob URLs only work if the file is loaded from a server. "http//localhost" works. "file://" does not.)')
+          file.getBlobURL(function (err, url) {
+            if (err) return log(err.message)
+            log('File done.')
+            log('<a href="' + url + '">Download full file: ' + file.name + '</a>')
+          })
+        })
+      }
+
+      function log (str) {
+        var p = document.createElement('p')
+        p.innerHTML = str
+        document.querySelector('.log').appendChild(p)
+      }
+    </script>
+  </body>
+</html>
