@@ -4014,6 +4014,7 @@ body::-webkit-scrollbar-thumb {
 @media (min-width: 768px) {
     .article__trailer {
         margin-bottom: 40px;
+        margin-left: 20px;
     }
     .article__category {
         margin-bottom: 30px;
